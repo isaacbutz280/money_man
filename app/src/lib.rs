@@ -102,7 +102,8 @@ impl Account {
     ) -> Result<(), Box<dyn Error>> {
         self.transactions.insert(transaction.clone(), false);
         if name == "Salary" {
-            self.update_salary(transaction)
+            self.update_salary(transaction)?;
+            self.save()
         } else if name != "Ignore" {
             self.port.update(name, transaction.charge)?;
             self.save()
@@ -235,7 +236,6 @@ impl Account {
             }
         }
     
-        println!("{rv}");
     
         rv.parse()
     }

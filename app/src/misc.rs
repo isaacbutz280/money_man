@@ -20,7 +20,7 @@ impl Serialize for Transaction {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_str(&format!("{}, {}, {}", self.date, self.desc, self.charge,))
+        serializer.serialize_str(&format!("{} | {} | {}", self.date, self.desc, self.charge,))
     }
 }
 
@@ -37,7 +37,7 @@ struct TransactionVisitor;
 
 lazy_static! {
     static ref MY_REGEX: Regex =
-        Regex::new(r"^(\d{4}-\d{2}-\d{2}), ([^,]+), \$(-?[0-9]+\.[0-9]+)$").unwrap();
+        Regex::new(r"^(\d{4}-\d{2}-\d{2}) \| ([^\|]+) \| \$(-?[0-9]+\.[0-9]+)$").unwrap();
 }
 
 // lazy_static! {
