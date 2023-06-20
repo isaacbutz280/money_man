@@ -1,5 +1,6 @@
-use eframe::{egui, epaint};
 use app;
+use eframe::{egui, epaint};
+use native_dialog::FileDialog;
 
 pub struct Assign {
     cator: Vec<app::Transaction>,
@@ -58,7 +59,7 @@ impl super::App for Assign {
 
                 if ui.add(egui::Button::new("->")).clicked() {
                     // If we have a transaction to process...
-                    if let Some(transaction) = &self.act_t { 
+                    if let Some(transaction) = &self.act_t {
                         // Process, and get the next one
                         match acc.update_vope(&self.sel_vope, transaction) {
                             Ok(()) => self.act_t = self.cator.pop(),
@@ -71,9 +72,20 @@ impl super::App for Assign {
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.horizontal_wrapped(|ui| {
-
                 if ui.button("Start").clicked() && self.act_t.is_none() {
-                    self.cator.append(&mut acc.get_uncatorgorized());
+
+                    let path = FileDialog::new()
+                        .set_location("~/Desktop")
+                        .add_filter("CSV File", &["csv"])
+                        .show_open_single_file()
+                        .unwrap();
+
+                    let path = match path {
+                        Some(path) => path,
+                        None => return,
+                    };
+
+                    self.cator.append(&mut acc.get_uncatorgorized(&path));
                     self.act_t = self.cator.pop();
                 }
                 ui.separator();

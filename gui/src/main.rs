@@ -2,7 +2,8 @@
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
-use std::path::PathBuf;
+use directories::{BaseDirs, ProjectDirs, UserDirs};
+use std::{io, path::PathBuf};
 
 // When compiling natively:
 fn main() {
@@ -17,7 +18,6 @@ fn main() {
         std::env::set_var("RUST_LOG", rust_log);
     }
 
-
     let options = eframe::NativeOptions {
         drag_and_drop_support: true,
 
@@ -29,25 +29,15 @@ fn main() {
         ..Default::default()
     };
 
-
-    let acc_path = PathBuf::from("C:\\Users\\Isaac\\Git_Repos\\money_man\\app\\acc\\isaac.json");
-    let a = app::Account::from(acc_path);
-
-    let b = match a {
-        Ok(a) => a,
-        Err(e) => {
-            println!("{}", e);
-            app::Account::default()
-        },
-    };
-
-    eframe::run_native(
-        "Money Man",
-        options,
-        Box::new(|cc| Box::new(gui::wrap_app::WrapApp::new(cc, b))),
-    )
+    match app::Account::new() {
+        Ok(acc) => eframe::run_native(
+            "Money Man",
+            options,
+            Box::new(|cc| Box::new(gui::wrap_app::WrapApp::new(cc, acc))),
+        ),
+        Err(e) => println!("Corrupted account! {}", e),
+    }
 }
-
 
 // fn main() {
 //     let acc_path = PathBuf::from("C:\\Users\\Isaac\\Git_Repos\\money_man\\app\\acc\\isaac.json");
@@ -57,7 +47,7 @@ fn main() {
 //     if let Err(e) = a {
 //         log_error(Box::from(e));
 //         process::exit(0)
-//     } 
+//     }
 //     else if let Err(e) = cmd_loop(& mut a.unwrap()) {
 //         log_error(Box::from(e));
 //         process::exit(0)
@@ -70,7 +60,7 @@ fn main() {
 // fn cmd_loop(acc: &mut Account) -> Result<(), Box<dyn Error>> {
 //     let mut b_flag = true;
 
-//     while b_flag {  // This is 
+//     while b_flag {  // This is
 //         let actions: Vec<Box<dyn Action>> = vec![
 //             actions::View::new(),
 //             actions::Add::new(),

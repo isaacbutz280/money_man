@@ -2,13 +2,14 @@ pub mod misc;
 pub mod portfolio;
 pub mod vope;
 
+use directories::ProjectDirs;
 use portfolio::Portfolio;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     error::Error,
     fs,
-    path::PathBuf,
+    path::{Path, PathBuf},
     str::FromStr,
     vec,
 };
@@ -29,54 +30,58 @@ pub struct Account {
     transactions: HashMap<misc::Transaction, bool>,
 }
 
-impl Default for Account {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Account {
-    fn new() -> Account {
-        Self {
-            name: "Isaac".to_string(),
-            date: "Yesterday".to_string(),
-            path: PathBuf::from_str("C:\\Users\\Isaac\\Git_Repos\\money_man\\app\\acc\\isaac.json")
-                .unwrap(),
-            port: Portfolio::new(),
-            transactions: HashMap::default(),
-        }
-    }
+    pub fn new() -> Result<Account, Box<dyn Error>> {
+        let binding = ProjectDirs::from("io", "ButzIndustries", "MoneyMan").unwrap();
+        let path = Path::new(binding.data_dir()).join("acc.json");
+        let file_read = fs::read_to_string(&path);
 
-    /**
-     * Builds a new account from a JSON file.
-     */
-    pub fn from(pb: PathBuf) -> Result<Account, Box<dyn Error>> {
-        // Parse the JSON to a string
-        let raw_json = fs::read_to_string(&pb).unwrap_or_default();
+        match file_read {
+            Ok(raw_json) => {
+                let res_acc: Result<Account, serde_json::Error> = serde_json::from_str(&raw_json);
 
-        // Parse the string to an account object
-        let res_acc: Result<Account, serde_json::Error> = serde_json::from_str(&raw_json);
-
-        // Return result, printing error in case of failure
-        match res_acc {
-            Ok(mut acc) => {
-                acc.path = pb;
-                acc.port.re_calc();
-                acc.save()?;
-                Ok(acc)
+                match res_acc {
+                    Ok(mut acc) => {
+                        acc.port.re_calc();
+                        acc.save()?;
+                        println!("Acc reopened");
+                        Ok(acc)
+                    }
+                    Err(e) => {
+                        println!("Failed to open Account: {}", &e);
+                        Err(Box::new(e))
+                    }
+                }
             }
-            Err(e) => {
-                println!("Failed to open Account: {}", &e);
-                Err(Box::new(e))
+            Err(_) => {
+                fs::create_dir_all(path.parent().unwrap())?;
+
+                println!("Creating new account...");
+
+                let acc = Account {
+                    name: "Unknown".to_string(),
+                    date: "Today".to_string(),
+                    path: path.to_path_buf(),
+                    port: Portfolio::new(),
+                    transactions: HashMap::new(),
+                };
+
+                println!("Acc created");
+
+                acc.save()?;
+
+                println!("Acc saved");
+
+                Ok(acc)
             }
         }
     }
 
     // For assign
 
-    pub fn get_uncatorgorized(&self) -> Vec<misc::Transaction> {
+    pub fn get_uncatorgorized(&self, path: &Path) -> Vec<misc::Transaction> {
         // Get transactions from file
-        let transactions = match self.get_trans() {
+        let transactions = match self.get_trans(path) {
             Ok(t) => t,
             Err(_) => vec![],
         };
@@ -107,9 +112,8 @@ impl Account {
         } else if name != "Ignore" {
             self.port.update(name, transaction.charge)?;
             self.save()
-        }
-        else {
-           Ok(()) 
+        } else {
+            Ok(())
         }
     }
 
@@ -145,7 +149,12 @@ impl Account {
         self.save()
     }
 
-    pub fn transfer(&mut self, from: &str, to: &str, amount: misc::Dollar) -> Result<(), Box<dyn Error>> {
+    pub fn transfer(
+        &mut self,
+        from: &str,
+        to: &str,
+        amount: misc::Dollar,
+    ) -> Result<(), Box<dyn Error>> {
         // Complete transfer
         self.port.transfer(from, to, amount)?;
 
@@ -156,59 +165,31 @@ impl Account {
     // Helper
 
     // Adds all the transactions in - for now, we are parsing the CSV's
-    fn get_trans(&self) -> Result<Vec<misc::Transaction>, Box<dyn Error>> {
+    fn get_trans(&self, path: &Path) -> Result<Vec<misc::Transaction>, Box<dyn Error>> {
         let mut trans = vec![];
 
-        let base = self.path.parent().unwrap();
-        let csv = "/../csv/";
-        let dir = PathBuf::from(format!("{}{}", base.to_str().unwrap(), csv));
+        let mut rdr = csv::Reader::from_path(path)?;
 
-        // For each csv in dir
-        for entry in fs::read_dir(dir)? {
-            let entry = entry?;
-            let name = entry.file_name().to_str().unwrap().to_string();
+        // For line in csv...
+        for result in rdr.records() {
+            // Get the record
+            let record = result?;
 
-            // determine source
-            let columns = if name.eq_ignore_ascii_case("discover.csv") {
-                [0, 2, 3]
-            } else if name.eq_ignore_ascii_case("chase.csv") {
-                [0, 2, 5]
-            } else {
-                [1, 3, 4]
+            // csv should be of form: 
+            // date(mm/dd/yyyy), description, amount
+            let date = record[0].to_owned();
+            let desc = record[1].to_owned();
+
+            let mut amount = match Account::money_to_float(&record[2]) {
+                Ok(okay) => okay,
+                Err(_) => 0.0,
             };
 
-            // Use csv reader to disect file
-            let mut rdr = csv::Reader::from_path(entry.path())?;
-
-            // For line in csv...
-            for result in rdr.records() {
-                let record = result?;
-                let date = record[columns[0]].to_owned();
-                let descrr = record[columns[1]].to_owned();
-
-                let mut amount;
-
-                match Account::money_to_float(&record[columns[2]]) {
-                    Ok(okay) => amount = okay,
-                    Err(_) => amount = 0.0,
-                };
-
-                if name.eq_ignore_ascii_case("discover.csv") {
-                    amount *= -1.0
-                } else if name.eq_ignore_ascii_case("apg.csv") {
-                    if 0.0 == amount {
-                        amount = Account::money_to_float(&record[columns[2] + 1]).unwrap();
-                    } else {
-                        amount *= -1.0;
-                    }
-                }
-
-                trans.push(misc::Transaction::new(
-                    chrono::NaiveDate::parse_from_str(&date, "%m/%d/%Y").unwrap(),
-                    descrr,
-                    misc::Dollar::from(amount),
-                ));
-            }
+            trans.push(misc::Transaction::new(
+                chrono::NaiveDate::parse_from_str(&date, "%m/%d/%Y").unwrap(),
+                desc,
+                misc::Dollar::from(amount),
+            ));
         }
 
         Ok(trans)
@@ -223,6 +204,9 @@ impl Account {
      */
     fn save(&self) -> Result<(), Box<dyn Error>> {
         let js = serde_json::to_string(&self)?;
+
+        println!("path: {:?}", &self.path);
+
         fs::write(&self.path, js)?;
 
         Ok(())
@@ -235,8 +219,7 @@ impl Account {
                 rv.push(c);
             }
         }
-    
-    
+
         rv.parse()
     }
 }
