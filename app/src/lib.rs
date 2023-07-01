@@ -10,7 +10,6 @@ use std::{
     error::Error,
     fs,
     path::{Path, PathBuf},
-    str::FromStr,
     vec,
 };
 
@@ -18,7 +17,9 @@ use std::{
 pub use misc::Transaction;
 
 /**
- * An account is the highest level. Contains a portfolio + metadata
+ * An account contains all information about the user.
+ *
+ * The highest level of what the end user can see.
  */
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Account {
@@ -32,6 +33,7 @@ pub struct Account {
 
 impl Account {
     pub fn new() -> Result<Account, Box<dyn Error>> {
+        // Builds account from JSON, or creates new account if unavailable
         let binding = ProjectDirs::from("io", "ButzIndustries", "MoneyMan").unwrap();
         let path = Path::new(binding.data_dir()).join("acc.json");
         let file_read = fs::read_to_string(&path);
@@ -77,8 +79,9 @@ impl Account {
         }
     }
 
-    // For assign
-
+    /// Given a path to a [properly formatted csv file](https://github.com/isaacbutz280/money_man#readme),
+    /// parses the file to get all uncatorgorized transactions.
+    /// 
     pub fn get_uncatorgorized(&self, path: &Path) -> Vec<misc::Transaction> {
         // Get transactions from file
         let transactions = match self.get_trans(path) {
@@ -175,12 +178,12 @@ impl Account {
             // Get the record
             let record = result?;
 
-            // csv should be of form: 
+            // csv should be of form:
             // date(mm/dd/yyyy), description, amount
             let date = record[0].to_owned();
             let desc = record[1].to_owned();
 
-            let mut amount = match Account::money_to_float(&record[2]) {
+            let mut amount = match money_to_float(&record[2]) {
                 Ok(okay) => okay,
                 Err(_) => 0.0,
             };
@@ -211,15 +214,15 @@ impl Account {
 
         Ok(())
     }
+}
 
-    fn money_to_float(s: &str) -> Result<f32, std::num::ParseFloatError> {
-        let mut rv = String::new();
-        for c in s.chars() {
-            if c != '$' && c != ' ' && c != '+' && c != ',' {
-                rv.push(c);
-            }
+fn money_to_float(s: &str) -> Result<f32, std::num::ParseFloatError> {
+    let mut rv = String::new();
+    for c in s.chars() {
+        if c != '$' && c != ' ' && c != '+' && c != ',' {
+            rv.push(c);
         }
-
-        rv.parse()
     }
+
+    rv.parse()
 }
