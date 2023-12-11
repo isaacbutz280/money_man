@@ -2,12 +2,12 @@ use app::vope;
 use eframe::egui::{Widget, self};
 
 pub struct AccDisp {
-    account: Vec<vope::Vope>,
+    account: Vec<(String, misc::Dollar, misc::Dollar>,
 }
 
 impl AccDisp {
-    pub fn new(data: Vec<vope::Vope>) -> Self {
-        Self { account: data }
+    pub fn new(data: &Vec<vope::Vope>) -> Self {
+        Self { account: dat }
     }
 }
 // self.account.len()

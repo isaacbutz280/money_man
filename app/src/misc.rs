@@ -1,21 +1,20 @@
 use chrono::NaiveDate;
-use core::{f32, fmt};
 use lazy_static::lazy_static;
 use regex::Regex;
-use serde::de::{self, Unexpected, Visitor};
-use serde::{Deserialize, Deserializer, Serialize};
-use std::hash::Hash;
-use std::{fmt::Display, ops};
+use serde::{self, de};
+use std::{hash, ops, fmt};
 
-// A transaction
-#[derive(Clone, PartialEq, Eq)]
+/// Represents a banking transaction. Contains date, descroption, amount, and optionally a vope name (if categorized)
+/// 
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Transaction {
     pub date: chrono::NaiveDate,
     pub desc: String,
     pub charge: Dollar,
+    pub vope: Option<String>,
 }
 
-impl Serialize for Transaction {
+impl serde::Serialize for Transaction {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -24,10 +23,10 @@ impl Serialize for Transaction {
     }
 }
 
-impl<'de> Deserialize<'de> for Transaction {
+impl<'de> serde::Deserialize<'de> for Transaction {
     fn deserialize<D>(deserializer: D) -> Result<Transaction, D::Error>
     where
-        D: Deserializer<'de>,
+        D: serde::Deserializer<'de>,
     {
         deserializer.deserialize_string(TransactionVisitor)
     }
@@ -40,11 +39,7 @@ lazy_static! {
         Regex::new(r"^(\d{4}-\d{2}-\d{2}) \| ([^\|]+) \| \$(-?[0-9]+\.[0-9]+)$").unwrap();
 }
 
-// lazy_static! {
-// static ref re: Regex::new.unwrap(); // PERF: move this into a lazy_static!
-// }
-
-impl<'de> Visitor<'de> for TransactionVisitor {
+impl<'de> de::Visitor<'de> for TransactionVisitor {
     type Value = Transaction;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -66,13 +61,13 @@ impl<'de> Visitor<'de> for TransactionVisitor {
                         Dollar::from(*float),
                     ))
                 } else {
-                    Err(de::Error::invalid_value(Unexpected::Str(s), &self))
+                    Err(de::Error::invalid_value(de::Unexpected::Str(s), &self))
                 }
             } else {
-                Err(de::Error::invalid_value(Unexpected::Str(s), &self))
+                Err(de::Error::invalid_value(de::Unexpected::Str(s), &self))
             }
         } else {
-            Err(de::Error::invalid_value(Unexpected::Str(s), &self))
+            Err(de::Error::invalid_value(de::Unexpected::Str(s), &self))
         }
     }
 }
@@ -83,7 +78,7 @@ impl ToString for Transaction {
     }
 }
 
-impl Hash for Transaction {
+impl hash::Hash for Transaction {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.date.hash(state);
         self.desc.hash(state);
@@ -92,7 +87,7 @@ impl Hash for Transaction {
 
 impl Transaction {
     pub fn new(date: chrono::NaiveDate, desc: String, charge: Dollar) -> Self {
-        Self { date, desc, charge }
+        Self { date, desc, charge, vope: None }
     }
 }
 
@@ -101,7 +96,7 @@ fn round(num: f32, decimals: u32) -> f32 {
     (num * precison).round() / precison
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, Copy)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Default, Clone, Copy)]
 pub struct Dollar {
     pub amount: f32,
 }
@@ -180,7 +175,7 @@ impl PartialOrd for Dollar {
     }
 }
 
-impl Display for Dollar {
+impl fmt::Display for Dollar {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "${:.2}", self.amount)
     }

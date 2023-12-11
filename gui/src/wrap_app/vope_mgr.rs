@@ -1,5 +1,4 @@
 use crate::features::vope_hist;
-use app::misc;
 use eframe::egui::{self, Vec2};
 
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
@@ -125,7 +124,7 @@ impl super::App for VopeMgr {
                 ui.horizontal(|ui| {
                     if ui.button("save").clicked()
                         && acc
-                            .add_vope(add_name.as_str(), misc::Dollar::from(add_budget.as_str()))
+                            .add_vope(add_name.as_str(), app::Dollar::from(add_budget.as_str()))
                             .is_ok()
                     {
                         add_temp = false;
@@ -170,7 +169,7 @@ impl super::App for VopeMgr {
                     ui.horizontal(|ui| {
                         if ui.button("save").clicked()
                             && acc
-                                .transfer(&trans_from, &trans_to, misc::Dollar::from(trans_amount.as_str()))
+                                .transfer(&trans_from, &trans_to, app::Dollar::from(trans_amount.as_str()))
                                 .is_ok()
                         {
                             // Save state here....
@@ -214,7 +213,7 @@ impl super::App for VopeMgr {
                 ui.horizontal(|ui| {
                     if ui.button("save").clicked() {
                         let r1 = acc.rm_vope(&edit_name);
-                        let r2 = acc.add_vope(edit_name, misc::Dollar::from(edit_budget.as_str()));
+                        let r2 = acc.add_vope(edit_name, app::Dollar::from(edit_budget.as_str()));
 
                         if r1.is_ok() && r2.is_ok() {
                             // Save state here....

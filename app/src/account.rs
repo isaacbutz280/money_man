@@ -1,7 +1,3 @@
-mod misc;
-mod portfolio;
-pub mod vope;
-
 use directories::ProjectDirs;
 use portfolio::Portfolio;
 use serde::{Deserialize, Serialize};
@@ -12,26 +8,20 @@ use std::{
     vec,
 };
 
-// Re-export for GUI use
-pub use misc::Transaction;
-pub use misc::Dollar;
-
-let data_base = Path::new(ProjectDirs::from("io", "ButzIndustries", "MoneyMan").unwrap().data_dir())
-
-/// An Account is the abstraction for a user. Contains Metadata and a portfolio
+/// An Account is the abstraction for a user
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Account {
-    init: bool,       // True or false, if the account has been initalized
-    name: String,     // Persons name
-    date: String,     // Todays date
-    port: Portfolio,  // The banking information
+    init    : bool,       // True or false, if the account has been initalized
+    pub name: String,     // Persons name
+    pub date: String,     // Todays date
+    pub port: Portfolio,  // The banking information
 }
 
 impl Account {
     pub fn new() -> Result<Account, Box<dyn Error>> {
         // Builds account from JSON, or creates new account if unavailable
-        let binding = ;
-        let path = .join("acc.json");
+        let binding = ProjectDirs::from("io", "ButzIndustries", "MoneyMan").unwrap();
+        let path = Path::new(binding.data_dir()).join("acc.json");
         let file_read = fs::read_to_string(&path);
 
         match file_read {
@@ -77,6 +67,7 @@ impl Account {
 
     /// Given a path to a [properly formatted csv file](https://github.com/isaacbutz280/money_man#readme),
     /// parses the file to get all uncatorgorized transactions.
+    ///
     pub fn get_uncatorgorized(&self, path: &Path) -> Vec<misc::Transaction> {
         // Get transactions from file
         let transactions = match self.get_trans(path) {
@@ -212,15 +203,4 @@ impl Account {
 
         Ok(())
     }
-}
-
-fn money_to_float(s: &str) -> Result<f32, std::num::ParseFloatError> {
-    let mut rv = String::new();
-    for c in s.chars() {
-        if c != '$' && c != ' ' && c != '+' && c != ',' {
-            rv.push(c);
-        }
-    }
-
-    rv.parse()
 }

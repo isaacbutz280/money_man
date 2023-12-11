@@ -1,18 +1,15 @@
 use crate::{misc, vope};
 use serde::{Deserialize, Serialize};
-use std::{error::Error, io::ErrorKind};
+use std::{error::Error, io::ErrorKind, collections::HashMap};
 
 /**
- * A portfolio is a collection of Vopes
+ * A portfolio is a collection of envelopes
  */
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Portfolio {
-    default: (String, misc::Dollar), // Default vopes (name, budget)
-
-    pub accounts: Vec<vope::Vope>, // Our vopes
-    pub paycheck: misc::Dollar,        // Amount in one paycheck
-    pub budgeted: misc::Dollar,        // Amount of paycheck budgeted
-    pub holdings: misc::Dollar,        // Total money in account
+    accounts:     Vec<vope::Vope>,     // The list of envelopes
+    budgeted:     misc::Dollar,        // Amount in monthly budget
+    holdings:     misc::Dollar,        // Total money in account
 }
 
 impl Default for Portfolio {
@@ -22,33 +19,23 @@ impl Default for Portfolio {
 }
 
 impl Portfolio {
+
+    /* Creates a new Portfolio
+     * 
+     */
     pub fn new() -> Portfolio {
         Self {
             default: ("Safety".to_owned(), misc::Dollar::from(100.0)),
             accounts: vec![vope::Vope::new("Safety".to_owned(), misc::Dollar::from(100.0))],
-            paycheck: misc::Dollar::from(2100.0),
-            budgeted: misc::Dollar::from(100.0),
+            budgeted: misc::Dollar::from(0.0),
             holdings: misc::Dollar::from(0.0),
         }
-    }
-
-    pub fn contains(&self, name: &str) -> bool {
-        self.accounts
-            .iter()
-            .any(|v| v.name.eq_ignore_ascii_case(name))
-    }
-
-    pub fn get_accounts(&mut self) -> &mut Vec<vope::Vope> {
-        &mut self.accounts
     }
 
     pub fn add(&mut self, name: &str, amount: misc::Dollar) -> Result<(), Box<dyn Error>> {
         if self.contains(&name) {
             // Duplicate name
             Err(Box::new(std::io::Error::from(ErrorKind::InvalidInput)))
-        } else if self.paycheck < (self.budgeted + amount) {
-            // Over budget
-            Err(Box::new(std::io::Error::from(ErrorKind::InvalidData)))
         } else {
             // Allowed
             self.accounts.push(vope::Vope::new(name.to_string(), amount));
@@ -108,6 +95,16 @@ impl Portfolio {
         }
 
         Ok(())
+    }
+
+    pub fn contains(&self, name: &str) -> bool {
+        self.accounts
+            .iter()
+            .any(|v| v.name.eq_ignore_ascii_case(name))
+    }
+
+    pub fn get_accounts(&mut self) -> &mut Vec<vope::Vope> {
+        &mut self.accounts
     }
 
     pub fn stringy(&self, verbose: bool) -> String {
@@ -176,6 +173,7 @@ impl Portfolio {
         }
     }
 
+    // 
     fn calc_holdings(&mut self) {
         self.holdings = misc::Dollar::from(0.0);
 
@@ -184,7 +182,7 @@ impl Portfolio {
         }
     }
 
-    pub fn re_calc(&mut self) {
+    fn re_calc(&mut self) {
         let mut budgeted = misc::Dollar::from(0.0);
         let mut holdings = misc::Dollar::from(0.0);
         
@@ -196,4 +194,7 @@ impl Portfolio {
         self.budgeted = budgeted;
         self.holdings = holdings;
     }
+
+
+
 }

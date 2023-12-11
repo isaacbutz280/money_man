@@ -40,6 +40,10 @@ pub struct WrapApp {
 }
 
 impl WrapApp {
+
+    /*
+     * Creates a new 
+     */
     pub fn new(_cc: &eframe::CreationContext<'_>, acc: app::Account) -> Self {
         #[allow(unused_mut)]
         let mut slf = Self {
@@ -98,7 +102,20 @@ impl WrapApp {
                 ui.visuals_mut().button_frame = false;
                 egui::widgets::global_dark_light_mode_switch(ui);
                 ui.separator();
-                ui.add(egui::widgets::Checkbox::new(&mut true, "A test box"));
+                if (ui.button("Settings").clicked()){
+                    // Create a new window
+                    egui::Window::new("Settings").show(ctx, |ui| {
+                        ui.label("Hello World!");
+                        
+                        // Create a pop-up below a widget
+                        if let Some(button_response) = ui.button("Show Popup").response {
+                            egui::containers::popup::popup_below_widget(ui, egui::Id::new("my_popup"), &button_response, |ui| {
+                                ui.label("This is a popup");
+                            });
+                        }
+                    });
+
+                }
             });
         });
     }
