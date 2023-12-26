@@ -7,6 +7,7 @@ pub struct Vope {
     pub name: String,
     pub budget: misc::Dollar,
     pub actual_amount: misc::Dollar,
+    pub transactions: Vec<misc::Transaction>,
 }
 
 impl Vope {
@@ -15,6 +16,7 @@ impl Vope {
             name,
             budget,
             actual_amount: misc::Dollar::from(0.0),
+            transactions: vec![],
         }
     }
 }

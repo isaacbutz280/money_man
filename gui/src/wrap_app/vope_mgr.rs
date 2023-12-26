@@ -4,6 +4,8 @@ use eframe::egui::{self, Vec2};
 
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 pub struct VopeMgr {
+    selected: String,
+
     add_open: bool,
     add_name: String,
     add_budget: String,
@@ -28,6 +30,7 @@ impl Default for VopeMgr {
 impl VopeMgr {
     fn new() -> Self {
         Self {
+            selected: "Safety".to_owned(),
             add_open: false,
             trans_open: false,
             edit_open: false,
@@ -50,6 +53,7 @@ impl super::App for VopeMgr {
 
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame, acc: &mut app::Account) {
         let Self {
+            selected,
             add_open,
             trans_open,
             edit_open,
@@ -78,7 +82,7 @@ impl super::App for VopeMgr {
                 });
 
                 egui::ScrollArea::new([false, true]).show(ui, |scroll_ui| {
-                    scroll_ui.add(vope_hist::VopeHist::new(acc.get_vope_history()))
+                    scroll_ui.add(vope_hist::VopeHist::new(acc.get_vope_history(selected)))
                 });
             });
 
@@ -249,7 +253,9 @@ impl super::App for VopeMgr {
                                 .min_size(Vec2::new(min_width - 10.0, min_width / 2.0)),
                         )
                         .clicked()
-                    {}
+                    {
+                        self.selected = v.name.clone();
+                    }
                 }
             });
         });

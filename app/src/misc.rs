@@ -8,7 +8,7 @@ use std::hash::Hash;
 use std::{fmt::Display, ops};
 
 // A transaction
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Transaction {
     pub date: chrono::NaiveDate,
     pub desc: String,
@@ -127,6 +127,22 @@ impl From<&str> for Dollar {
 
 impl Eq for Dollar {}
 
+impl ops::Div for Dollar {
+    type Output = f32;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        self.amount / rhs.amount
+    }
+}
+
+impl ops::Mul<f32> for Dollar {
+    type Output = Self;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        Dollar::from(round(self.amount * rhs, 2))
+    }
+}
+
 impl ops::Add<f32> for Dollar {
     type Output = Dollar;
 
@@ -142,11 +158,20 @@ impl ops::Add<Dollar> for Dollar {
         Dollar::from(round(self.amount + rhs.amount, 2))
     }
 }
+
 impl ops::Sub<Dollar> for Dollar {
     type Output = Dollar;
 
     fn sub(self, rhs: Dollar) -> Self::Output {
         Dollar::from(round(self.amount - rhs.amount, 2))
+    }
+}
+
+impl ops::Sub<f32> for Dollar {
+    type Output = Self;
+
+    fn sub(self, rhs: f32) -> Self::Output {
+        Dollar::from(round(self.amount - rhs, 2))
     }
 }
 

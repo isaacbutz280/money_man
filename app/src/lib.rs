@@ -27,8 +27,6 @@ pub struct Account {
     pub date: String,
     pub path: PathBuf,
     pub port: Portfolio,
-    // This is a collection of transactions. Only need a HashSet, but that isn't easily serde...
-    transactions: HashMap<misc::Transaction, bool>,
 }
 
 impl Account {
@@ -65,7 +63,6 @@ impl Account {
                     date: "Today".to_string(),
                     path: path.to_path_buf(),
                     port: Portfolio::new(),
-                    transactions: HashMap::new(),
                 };
 
                 println!("Acc created");
@@ -84,22 +81,12 @@ impl Account {
     /// 
     pub fn get_uncatorgorized(&self, path: &Path) -> Vec<misc::Transaction> {
         // Get transactions from file
-        let transactions = match self.get_trans(path) {
+        let mut tr = match self.get_trans(path) {
             Ok(t) => t,
-            Err(_) => vec![],
+            Err(e) => vec![],
         };
 
-        // Return all transactions we haven't already catorgorized
-        transactions
-            .iter()
-            .filter_map(|t| {
-                if self.transactions.contains_key(t) {
-                    None
-                } else {
-                    Some(t.clone())
-                }
-            })
-            .collect()
+        tr.into_iter().filter(|uncat_t| !self.port.transaction_exists(&uncat_t)).collect()
     }
 
     // Given name of Vope, transaction, updates the appropraite vope
@@ -108,22 +95,23 @@ impl Account {
         name: &str,
         transaction: &misc::Transaction,
     ) -> Result<(), Box<dyn Error>> {
-        self.transactions.insert(transaction.clone(), false);
-        if name == "Salary" {
-            self.update_salary(transaction)?;
-            self.save()
-        } else if name != "Ignore" {
-            self.port.update(name, transaction.charge)?;
-            self.save()
-        } else {
-            Ok(())
-        }
+        self.port.update(name, transaction)?;
+
+        self.save()
     }
 
     // For vope management
 
-    pub fn get_vope_history(&self) -> Vec<misc::Transaction> {
-        vec![]
+    pub fn get_vope_history(&self, name: &str) -> Vec<misc::Transaction> {
+        let mut hist = vec![];
+        
+        for v in self.port.accounts.iter() {
+            if name == v.name {
+                hist = v.transactions.clone();
+            }
+        }
+
+        hist
     }
 
     /**
@@ -178,12 +166,13 @@ impl Account {
             // Get the record
             let record = result?;
 
+
             // csv should be of form:
             // date(mm/dd/yyyy), description, amount
             let date = record[0].to_owned();
             let desc = record[1].to_owned();
 
-            let mut amount = match money_to_float(&record[2]) {
+            let amount = match money_to_float(&record[2]) {
                 Ok(okay) => okay,
                 Err(_) => 0.0,
             };
@@ -196,10 +185,6 @@ impl Account {
         }
 
         Ok(trans)
-    }
-
-    fn update_salary(&mut self, transaction: &Transaction) -> Result<(), Box<dyn Error>> {
-        self.port.cash_paycheck(transaction.charge)
     }
 
     /**
