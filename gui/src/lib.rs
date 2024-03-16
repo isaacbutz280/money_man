@@ -1,9 +1,14 @@
-#![forbid(unsafe_code)]
 #![cfg_attr(not(debug_assertions), deny(warnings))] // Forbid warnings in release builds
-#![warn(clippy::all, rust_2021_compatibility)]
+#![forbid(unsafe_code)]
+#![warn(clippy::all)]
 
-pub mod wrap_app;
-pub mod features;
+// Module definitions
+pub mod wrap_app;   // This is our main app
+mod features;
+
+pub fn start(cc: &eframe::CreationContext<'_>) -> Box<dyn eframe::App> {
+    Box::new(wrap_app::WrapApp::new(cc))
+}
 
 // ----------------------------------------------------------------------------
 // When compiling for web:

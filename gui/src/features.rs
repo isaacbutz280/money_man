@@ -1,9 +1,12 @@
 use eframe::egui;
 
 pub mod piechart;
-pub mod acc_disp;
+pub mod acc_table;
 pub mod welcome_msg;
 pub mod vope_hist;
+mod menu_bar;
+pub use menu_bar::Menu;
+
 
 /// Something to view in the demo windows
 pub trait View {
