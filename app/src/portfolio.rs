@@ -252,9 +252,11 @@ impl Portfolio {
 
     pub(crate) fn calc_holdings(&mut self) {
         self.holdings = dollar::Dollar::default();
+        self.budgeted = dollar::Dollar::default();
 
         for v in self.envelopes.iter_mut() {
             self.holdings += v.actual_amount;
+            self.budgeted += v.budget;
         }
     }
 }
