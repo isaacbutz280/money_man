@@ -1,9 +1,10 @@
 use eframe::egui;
 
-pub mod piechart;
+pub mod acc_matrix;
 pub mod acc_table;
-pub mod welcome_msg;
+pub mod piechart;
 pub mod vope_hist;
+pub mod welcome_msg;
 mod menu_bar;
 pub use menu_bar::Menu;
 

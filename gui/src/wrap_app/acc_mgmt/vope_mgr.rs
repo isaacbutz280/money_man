@@ -3,7 +3,7 @@ use eframe::egui;
 // Local Library imports
 use app::dollar;
 // Local imports
-use crate::features::vope_hist;
+use crate::features::{self, vope_hist};
 
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 pub struct VopeMgr {
@@ -54,214 +54,234 @@ impl super::AccDisp for VopeMgr {
         "Vope Mgr".to_string()
     }
 
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame, acc: &mut Box<app::Account>) {
-        // let Self {
-        //     selected,
-        //     add_open,
-        //     trans_open,
-        //     edit_open,
-        //     add_name,
-        //     add_budget,
-        //     trans_from,
-        //     trans_to,
-        //     trans_amount,
-        //     edit_name,
-        //     edit_budget,
-        //     edit_amount,
-        // } = self;
+    fn update(
+        &mut self,
+        ctx: &egui::Context,
+        _frame: &mut eframe::Frame,
+        acc: &mut Box<app::Account>,
+    ) {
+        let Self {
+            selected,
+            add_open,
+            trans_open,
+            edit_open,
+            add_name,
+            add_budget,
+            trans_from,
+            trans_to,
+            trans_amount,
+            edit_name,
+            edit_budget,
+            edit_amount,
+        } = self;
 
-        // egui::TopBottomPanel::top("vope_mgr_header").show(ctx, |ui| {
-        //     ui.vertical_centered(|ui| {
-        //         ui.heading("Vope Mgr");
-        //     });
-        // });
+        egui::TopBottomPanel::top("vope_mgr_header").show(ctx, |ui| {
+            ui.vertical_centered(|ui| {
+                ui.heading("Vope Mgr");
+            });
+        });
 
-        // egui::TopBottomPanel::bottom("acc_history")
-        //     .resizable(true)
-        //     .show(ctx, |ui| {
-        //         ui.vertical_centered(|ui| {
-        //             ui.heading("Vope History");
-        //             ui.separator();
-        //         });
+        // The bottom panel is where our Account History is displayed
+        egui::TopBottomPanel::bottom("acc_history")
+            .resizable(true)
+            .show(ctx, |ui| {
+                ui.vertical_centered(|ui| {
+                    ui.heading("Vope History");
+                    ui.separator();
+                });
 
-        //         egui::ScrollArea::new([false, true]).show(ui, |scroll_ui| {
-        //             scroll_ui.add(vope_hist::VopeHist::new(acc.get_vope_history(selected)))
-        //         });
-        //     });
+                egui::ScrollArea::new([false, true]).show(ui, |scroll_ui| {
+                    let hist = match acc.get_portfolio().get_vope_history(&selected) {
+                        Ok(h) => h,
+                        Err(e) => {
+                            log::error!("Failed to get vope history! {e}");
+                            vec![]
+                        },
+                    }; 
+                    scroll_ui.add(vope_hist::VopeHist::new(hist))
+                });
+            });
 
-        // egui::CentralPanel::default().show(ctx, |ui| {
-        //     ui.horizontal_wrapped(|ui| {
-        //         ui.label("Select a vope:");
+        // The center panel is another account table, plus some extras
+        egui::CentralPanel::default().show(ctx, |ui| {
+            ui.add(features::)
 
-        //         if ui.button("+").clicked() {
-        //             *add_open = true;
-        //         }
-        //         ui.add_space(10.0);
+            // ui.horizontal_wrapped(|ui| {
+            //     ui.label("Select a vope:");
 
-        //         if ui.button("Transfer").clicked() {
-        //             *trans_open = true;
-        //         }
-        //         ui.add_space(10.0);
+            //     if ui.button("+").clicked() {
+            //         *add_open = true;
+            //     }
+            //     ui.add_space(10.0);
 
-        //         if ui.button("Edit").clicked() {
-        //             *edit_open = true;
-        //         }
-        //     });
+            //     if ui.button("Transfer").clicked() {
+            //         *trans_open = true;
+            //     }
+            //     ui.add_space(10.0);
 
-        //     let mut add_temp = *add_open;
+            //     if ui.button("Edit").clicked() {
+            //         *edit_open = true;
+            //     }
+            // });
 
-        //     egui::Window::new("Add").open(add_open).show(ctx, |ui| {
-        //         egui::Grid::new("add_grid")
-        //             .num_columns(2)
-        //             .spacing([40.0, 4.0])
-        //             .striped(true)
-        //             .show(ui, |ui| {
-        //                 ui.label("Vope Name:");
-        //                 ui.add(egui::Separator::default().vertical());
-        //                 ui.add(egui::TextEdit::singleline(add_name));
-        //                 ui.end_row();
+            // let mut add_temp = *add_open;
 
-        //                 ui.label("Budgeted:");
-        //                 ui.add(egui::Separator::default().vertical());
-        //                 ui.add(egui::TextEdit::singleline(add_budget));
-        //                 ui.end_row();
-        //             });
+            // egui::Window::new("Add").open(add_open).show(ctx, |ui| {
+            //     egui::Grid::new("add_grid")
+            //         .num_columns(2)
+            //         .spacing([40.0, 4.0])
+            //         .striped(true)
+            //         .show(ui, |ui| {
+            //             ui.label("Vope Name:");
+            //             ui.add(egui::Separator::default().vertical());
+            //             ui.add(egui::TextEdit::singleline(add_name));
+            //             ui.end_row();
 
-        //         ui.separator();
+            //             ui.label("Budgeted:");
+            //             ui.add(egui::Separator::default().vertical());
+            //             ui.add(egui::TextEdit::singleline(add_budget));
+            //             ui.end_row();
+            //         });
 
-        //         ui.horizontal(|ui| {
-        //             if ui.button("save").clicked()
-        //                 && acc
-        //                     .add_vope(add_name.as_str(), dollar::Dollar::from(add_budget.as_str()))
-        //                     .is_ok()
-        //             {
-        //                 add_temp = false;
-        //             }
+            //     ui.separator();
 
-        //             if ui.button("cancel").clicked() {
-        //                 add_temp = false;
-        //             }
-        //         });
-        //     });
+            //     ui.horizontal(|ui| {
+            //         if ui.button("save").clicked()
+            //             && acc
+            //                 .add_vope(add_name.as_str(), dollar::Dollar::from(add_budget.as_str()))
+            //                 .is_ok()
+            //         {
+            //             add_temp = false;
+            //         }
 
-        //     *add_open &= add_temp;
+            //         if ui.button("cancel").clicked() {
+            //             add_temp = false;
+            //         }
+            //     });
+            // });
 
-        //     let mut trans_temp = *trans_open;
+            // *add_open &= add_temp;
 
-        //     egui::Window::new("Transfer")
-        //         .open(trans_open)
-        //         .show(ctx, |ui| {
-        //             egui::Grid::new("trans_grid")
-        //                 .num_columns(2)
-        //                 .spacing([40.0, 4.0])
-        //                 .striped(true)
-        //                 .show(ui, |ui| {
-        //                     ui.label("From:");
-        //                     ui.add(egui::Separator::default().vertical());
-        //                     ui.add(egui::TextEdit::singleline(trans_from));
-        //                     ui.end_row();
+            // let mut trans_temp = *trans_open;
 
-        //                     ui.label("To:");
-        //                     ui.add(egui::Separator::default().vertical());
-        //                     ui.add(egui::TextEdit::singleline(trans_to));
-        //                     ui.end_row();
+            // egui::Window::new("Transfer")
+            //     .open(trans_open)
+            //     .show(ctx, |ui| {
+            //         egui::Grid::new("trans_grid")
+            //             .num_columns(2)
+            //             .spacing([40.0, 4.0])
+            //             .striped(true)
+            //             .show(ui, |ui| {
+            //                 ui.label("From:");
+            //                 ui.add(egui::Separator::default().vertical());
+            //                 ui.add(egui::TextEdit::singleline(trans_from));
+            //                 ui.end_row();
 
-        //                     ui.label("Amount:");
-        //                     ui.add(egui::Separator::default().vertical());
-        //                     ui.add(egui::TextEdit::singleline(trans_amount));
-        //                     ui.end_row();
-        //                 });
+            //                 ui.label("To:");
+            //                 ui.add(egui::Separator::default().vertical());
+            //                 ui.add(egui::TextEdit::singleline(trans_to));
+            //                 ui.end_row();
 
-        //             ui.separator();
+            //                 ui.label("Amount:");
+            //                 ui.add(egui::Separator::default().vertical());
+            //                 ui.add(egui::TextEdit::singleline(trans_amount));
+            //                 ui.end_row();
+            //             });
 
-        //             ui.horizontal(|ui| {
-        //                 if ui.button("save").clicked()
-        //                     && acc
-        //                         .transfer(&trans_from, &trans_to, dollar::Dollar::from(trans_amount.as_str()))
-        //                         .is_ok()
-        //                 {
-        //                     // Save state here....
-        //                     trans_temp = false;
-        //                 }
+            //         ui.separator();
 
-        //                 if ui.button("cancel").clicked() {
-        //                     trans_temp = false;
-        //                 }
-        //             });
-        //         });
+            //         ui.horizontal(|ui| {
+            //             if ui.button("save").clicked()
+            //                 && acc
+            //                     .transfer(
+            //                         &trans_from,
+            //                         &trans_to,
+            //                         dollar::Dollar::from(trans_amount.as_str()),
+            //                     )
+            //                     .is_ok()
+            //             {
+            //                 // Save state here....
+            //                 trans_temp = false;
+            //             }
 
-        //     *trans_open &= trans_temp;
+            //             if ui.button("cancel").clicked() {
+            //                 trans_temp = false;
+            //             }
+            //         });
+            //     });
 
-        //     let mut edit_temp = *edit_open;
+            // *trans_open &= trans_temp;
 
-        //     egui::Window::new("Edit").open(edit_open).show(ctx, |ui| {
-        //         egui::Grid::new("edit_grid")
-        //             .num_columns(2)
-        //             .spacing([40.0, 4.0])
-        //             .striped(true)
-        //             .show(ui, |ui| {
-        //                 ui.label("Name:");
-        //                 ui.add(egui::Separator::default().vertical());
-        //                 ui.add(egui::TextEdit::singleline(edit_name));
-        //                 ui.end_row();
+            // let mut edit_temp = *edit_open;
 
-        //                 ui.label("New Budget:");
-        //                 ui.add(egui::Separator::default().vertical());
-        //                 ui.add(egui::TextEdit::singleline(edit_budget));
-        //                 ui.end_row();
+            // egui::Window::new("Edit").open(edit_open).show(ctx, |ui| {
+            //     egui::Grid::new("edit_grid")
+            //         .num_columns(2)
+            //         .spacing([40.0, 4.0])
+            //         .striped(true)
+            //         .show(ui, |ui| {
+            //             ui.label("Name:");
+            //             ui.add(egui::Separator::default().vertical());
+            //             ui.add(egui::TextEdit::singleline(edit_name));
+            //             ui.end_row();
 
-        //                 ui.label("Set new amount:");
-        //                 ui.add(egui::Separator::default().vertical());
-        //                 ui.add(egui::TextEdit::singleline(edit_amount));
-        //                 ui.end_row();
-        //             });
+            //             ui.label("New Budget:");
+            //             ui.add(egui::Separator::default().vertical());
+            //             ui.add(egui::TextEdit::singleline(edit_budget));
+            //             ui.end_row();
 
-        //         ui.separator();
+            //             ui.label("Set new amount:");
+            //             ui.add(egui::Separator::default().vertical());
+            //             ui.add(egui::TextEdit::singleline(edit_amount));
+            //             ui.end_row();
+            //         });
 
-        //         ui.horizontal(|ui| {
-        //             if ui.button("save").clicked() {
-        //                 let r1 = acc.rm_vope(&edit_name);
-        //                 let r2 = acc.add_vope(edit_name, dollar::Dollar::from(edit_budget.as_str()));
+            //     ui.separator();
 
-        //                 if r1.is_ok() && r2.is_ok() {
-        //                     // Save state here....
-        //                     edit_temp = false;
-        //                 }
-        //             }
+            //     ui.horizontal(|ui| {
+            //         if ui.button("save").clicked() {
+            //             let r1 = acc.rm_vope(&edit_name);
+            //             let r2 =
+            //                 acc.add_vope(edit_name, dollar::Dollar::from(edit_budget.as_str()));
 
-        //             if ui.button("cancel").clicked() {
-        //                 edit_temp = false;
-        //             }
+            //             if r1.is_ok() && r2.is_ok() {
+            //                 // Save state here....
+            //                 edit_temp = false;
+            //             }
+            //         }
 
-        //             if ui.button("Delete").clicked() && acc.rm_vope(&edit_name).is_ok() {
-        //                 // Delete the vope here
-        //                 edit_temp = false;
-        //             }
-        //         });
-        //     });
+            //         if ui.button("cancel").clicked() {
+            //             edit_temp = false;
+            //         }
 
-        //     *edit_open &= edit_temp;
+            //         if ui.button("Delete").clicked() && acc.rm_vope(&edit_name).is_ok() {
+            //             // Delete the vope here
+            //             edit_temp = false;
+            //         }
+            //     });
+            // });
 
-        //     ui.separator();
+            // *edit_open &= edit_temp;
 
-        //     let len = acc.get_portfolio().accounts.len();
+            // ui.separator();
 
-        //     let min_width = ui.available_width() / (len as f32).sqrt().ceil();
+            // let len = acc.get_portfolio().accounts.len();
 
-        //     ui.horizontal_wrapped(|ui| {
-        //         for v in acc.get_portfolio().accounts.iter() {
-        //             if ui
-        //                 .add(
-        //                     egui::Button::new(v.name.as_str())
-        //                         .min_size(egui::Vec2::new(min_width - 10.0, min_width / 2.0)),
-        //                 )
-        //                 .clicked()
-        //             {
-        //                 self.selected = v.name.clone();
-        //             }
-        //         }
-        //     });
-        // });
+            // let min_width = ui.available_width() / (len as f32).sqrt().ceil();
+
+            // ui.horizontal_wrapped(|ui| {
+            //     for v in acc.get_portfolio().accounts.iter() {
+            //         if ui
+            //             .add(
+            //                 egui::Button::new(v.name.as_str())
+            //                     .min_size(egui::Vec2::new(min_width - 10.0, min_width / 2.0)),
+            //             )
+            //             .clicked()
+            //         {
+            //             self.selected = v.name.clone();
+            //         }
+            //     }
+            // });
+        });
     }
-    
 }
