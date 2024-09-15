@@ -10,13 +10,14 @@ edition = "2021"
 # crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-eframe = "0.20" # Gives us egui, epi and web+native backends
+eframe = "0.28" # Gives us egui, epi and web+native backends
 serde = { version = "1", features = ["derive"], optional = true }
 app   = { path = "../app" }
 directories = "5.0.1"
 native-dialog = "0.6.4"
 log = "0.4.19"
 env_logger = "0.11.3"
+egui_plot = "0.28.1"
 
 [features]
 default = []

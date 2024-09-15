@@ -1,13 +1,14 @@
-use eframe::egui::{plot, Response, Ui, Widget};
+use eframe::egui::{Response, Ui, Widget};
+use egui_plot;
 
 pub struct PieChart {
-    wedges: Vec<plot::Polygon>,
+    wedges: Vec<egui_plot::Polygon>,
 }
 
 impl Widget for PieChart {
     fn ui(self, ui: &mut Ui) -> Response {
-        let plot = plot::Plot::new("items_demo")
-            .legend(plot::Legend::default().position(plot::Corner::LeftTop))
+        let plot = egui_plot::Plot::new("items_demo")
+            .legend(egui_plot::Legend::default().position(egui_plot::Corner::LeftTop))
             .allow_boxed_zoom(false)
             .allow_scroll(false)
             .allow_double_click_reset(false)
@@ -46,19 +47,19 @@ impl PieChart {
             start_angle = end_angle;
             end_angle = start_angle + (d.1 / sum) * 2.0 * std::f64::consts::PI;
 
-            let l1 = plot::PlotPoints::from_parametric_callback(
+            let l1 = egui_plot::PlotPoints::from_parametric_callback(
                 |t| (start_angle.cos() * t, start_angle.sin() * t),
                 1.0..=0.0,
                 fidelity,
             );
 
-            let l2 = plot::PlotPoints::from_parametric_callback(
+            let l2 = egui_plot::PlotPoints::from_parametric_callback(
                 |t| (end_angle.cos() * t, end_angle.sin() * t),
                 0.0..=1.0,
                 1000,
             );
 
-            let l3 = plot::PlotPoints::from_parametric_callback(
+            let l3 = egui_plot::PlotPoints::from_parametric_callback(
                 |t| (t.cos(), t.sin()),
                 end_angle..=start_angle,
                 1000,
@@ -71,11 +72,11 @@ impl PieChart {
 
             let pp_vec = pp_vec
                 .iter_mut()
-                .map(|pp| plot::PlotPoint::new(round(pp.x, 7), round(pp.y, 7)))
+                .map(|pp| egui_plot::PlotPoint::new(round(pp.x, 7), round(pp.y, 7)))
                 .collect();
 
 
-            wedges.push(plot::Polygon::new(plot::PlotPoints::Owned(pp_vec)).name(d.0.to_string()))
+            wedges.push(egui_plot::Polygon::new(egui_plot::PlotPoints::Owned(pp_vec)).name(d.0.to_string()))
         }
 
         Self { wedges }

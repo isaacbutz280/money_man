@@ -20,8 +20,6 @@ fn config() -> eframe::NativeOptions {
         #[cfg(feature = "wgpu")]
         renderer: eframe::Renderer::Wgpu,
 
-        drag_and_drop_support: true,
-        initial_window_size: Some([900.0, 500.0].into()),
         hardware_acceleration: eframe::HardwareAcceleration::Preferred,
         ..Default::default()
     }
@@ -35,7 +33,7 @@ fn main() {
    
 
     eframe::run_native("Money Man", options, Box::new(|cc| {
-        gui::start(cc)
+        Ok(gui::start(cc))
     }));
 
 }

@@ -1,9 +1,5 @@
 // 3PP import
 use eframe::egui;
-use std::{
-    error, 
-    io::{self, ErrorKind}
-};
 
 // Local library import
 // module imports
@@ -35,12 +31,6 @@ pub struct WrapApp {
 // The behavior to run every update cycle
 impl eframe::App for WrapApp {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
-        if ctx
-            .input_mut()
-            .consume_key(egui::Modifiers::NONE, egui::Key::F11)
-        {
-            frame.set_fullscreen(!frame.info().window_info.fullscreen);
-        }
 
         // Show the top menu bar
         self.menu.update(ctx, frame);

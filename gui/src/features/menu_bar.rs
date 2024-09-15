@@ -13,7 +13,6 @@ pub struct Menu {
 impl eframe::App for Menu {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("wrap_app_top_bar").show(ctx, |ui| {
-            egui::trace!(ui);
 
             ui.horizontal_wrapped(|ui| {
                 ui.visuals_mut().button_frame = false;

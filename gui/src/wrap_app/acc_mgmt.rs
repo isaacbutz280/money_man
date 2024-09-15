@@ -99,7 +99,6 @@ impl AccMgmt {
                 let p = self.acc.get_portfolio();
 
                 egui::ScrollArea::new([false, true])
-                    .always_show_scroll(false)
                     .show(ui, |scroll_ui| {
                         scroll_ui.vertical_centered(|ui| {
                             ui.label(format!("Net Worth: {}", p.view_holdings()));
