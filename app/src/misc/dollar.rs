@@ -127,5 +127,3 @@ impl fmt::Display for Dollar {
         write!(f, "${:.2}", self.amount)
     }
 }
-
-

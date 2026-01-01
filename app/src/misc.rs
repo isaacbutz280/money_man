@@ -1,4 +1,5 @@
-
+pub mod dollar;
+pub mod transaction;
 
 pub fn money_to_float(s: &str) -> Result<f32, std::num::ParseFloatError> {
     let mut rv = String::new();

@@ -1,21 +1,10 @@
 // Library Imports
-use log;
-use directories::ProjectDirs;
-use serde;
-use serde_json;
-use std::{
-    error,
-    fs,
-    path,
-};
+use std::{error, fs, path};
 
 // Define and re-export crate modules
-pub mod dollar;
+pub mod envelope;
 pub mod misc;
 pub mod portfolio;
-pub mod transaction;
-pub mod vope;
-pub mod tests;
 
 /**
  * An account contains all information about the user.
@@ -26,10 +15,8 @@ pub mod tests;
  */
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct Account {
-    port: portfolio::Portfolio,
-    name: String,
-    date: String,
-    path: path::PathBuf,
+    prt: Box<portfolio::Portfolio>,
+    cfg: AccConfig,
 }
 
 impl Account {
@@ -37,19 +24,9 @@ impl Account {
      * The new function is the "constructor" for an Account.
      */
     pub fn new() -> Result<Account, Box<dyn error::Error>> {
-        // Default account location is
-        // %USERPROFILE%\AppData\Roaming\ButzIndustries\MoneyMan\data\acc.json
-        let binding = ProjectDirs::from("io", "ButzIndustries", "MoneyMan").unwrap();
-        let path = path::Path::new(binding.data_dir()).join("acc.json");
-        fs::create_dir_all(path.parent().unwrap())?;
-
-        log::info!("Creating new account at {:?}", path);
-
         let mut acc = Account {
-            name: "Unknown".to_string(),
-            date: "Today".to_string(),
-            path: path.to_path_buf(),
-            port: portfolio::Portfolio::new(),
+            prt: Box::new(portfolio::Portfolio::new()),
+            cfg: AccConfig::new(),
         };
 
         acc.save()?;
@@ -82,17 +59,51 @@ impl Account {
         }
     }
 
-    pub fn save(&mut self) -> Result<(), Box<dyn error::Error>> {
-        self.save_as(&self.path.clone())
+    // Helper function for saving to my own path
+    fn save(&mut self) -> Result<(), Box<dyn error::Error>> {
+        self.save_as(&self.cfg.path.clone())
     }
 
     pub fn save_as(&mut self, acc_path: &path::Path) -> Result<(), Box<dyn error::Error>> {
-        self.port.calc_holdings();
+        self.prt.calc_holdings();
         let js = serde_json::to_string(&self)?;
 
         let _wr = fs::write(acc_path, js)?;
 
         Ok(())
+    }
+
+    pub fn get_portfolio(&self) -> &portfolio::Portfolio {
+        &self.prt
+    }
+
+    pub fn get_portfolio_mut(&mut self) -> &mut portfolio::Portfolio {
+        &mut self.prt
+    }
+
+    pub fn get_config_mut(&mut self) -> &mut AccConfig {
+        &mut self.cfg
+    }
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
+struct AccConfig {
+    name: String,
+    date: String,
+    path: path::PathBuf,
+}
+
+impl AccConfig {
+    fn new() -> Self {
+        // Default account location is ~/acc.js
+        let path = path::Path::new("~").join("acc.json");
+        log::info!("Creating new account at {:?}", path);
+
+        AccConfig {
+            name: "Unknown".to_string(),
+            date: "Today".to_string(),
+            path: path.to_path_buf(),
+        }
     }
 
     // Getters
@@ -103,13 +114,4 @@ impl Account {
     pub fn get_date(&self) -> &str {
         &self.date
     }
-
-    pub fn get_portfolio(&self) -> & portfolio::Portfolio {
-        & self.port
-    }
-
-    pub fn get_portfolio_mut(&mut self) -> &mut portfolio::Portfolio {
-        &mut self.port
-    }
-
 }
