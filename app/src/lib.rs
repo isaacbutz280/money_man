@@ -1,21 +1,20 @@
 // Library Imports
-use log;
 use directories::ProjectDirs;
+use log;
 use serde;
 use serde_json;
 use std::{
-    error,
-    fs,
-    path,
+    error, fs,
+    path::{self, PathBuf},
 };
 
 // Define and re-export crate modules
 pub mod dollar;
 pub mod misc;
 pub mod portfolio;
+pub mod tests;
 pub mod transaction;
 pub mod vope;
-pub mod tests;
 
 /**
  * An account contains all information about the user.
@@ -58,7 +57,9 @@ impl Account {
     }
 
     pub fn open(acc_path: path::PathBuf) -> Result<Account, Box<dyn error::Error>> {
-        let file_read = fs::read_to_string(acc_path);
+        // let file_read = fs::read_to_string(acc_path);
+        let p = path::PathBuf::from("/home/butz/OneDrive/Documents/Finances/acc.json");
+        let file_read = fs::read_to_string(p);
 
         match file_read {
             Ok(raw_json) => {
@@ -89,8 +90,9 @@ impl Account {
     pub fn save_as(&mut self, acc_path: &path::Path) -> Result<(), Box<dyn error::Error>> {
         self.port.calc_holdings();
         let js = serde_json::to_string(&self)?;
+        let p = path::PathBuf::from("/home/butz/OneDrive/Documents/Finances/acc.json");
 
-        let _wr = fs::write(acc_path, js)?;
+        let _wr = fs::write(p, js);
 
         Ok(())
     }
@@ -104,12 +106,11 @@ impl Account {
         &self.date
     }
 
-    pub fn get_portfolio(&self) -> & portfolio::Portfolio {
-        & self.port
+    pub fn get_portfolio(&self) -> &portfolio::Portfolio {
+        &self.port
     }
 
     pub fn get_portfolio_mut(&mut self) -> &mut portfolio::Portfolio {
         &mut self.port
     }
-
 }
