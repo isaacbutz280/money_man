@@ -1,0 +1,3 @@
+[build]
+filehash = false
+target = "gui/index.html" # Path to your template's index.html file
