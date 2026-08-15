@@ -2,7 +2,6 @@ use std::collections;
 
 use app::{misc, transaction};
 use eframe::{egui, epaint};
-use native_dialog::FileDialog;
 
 pub struct Assign {
     cator: Vec<transaction::Transaction>,
@@ -125,25 +124,25 @@ impl Assign {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.horizontal_wrapped(|ui| {
                 if ui.button("Start").clicked() && self.act_t.is_none() {
-                    let path = FileDialog::new()
-                        .set_location("~/Desktop")
-                        .add_filter("CSV File", &["csv"])
-                        .show_open_single_file()
-                        .unwrap();
+                    // let path = FileDialog::new()
+                    //     .set_location("~/Desktop")
+                    //     .add_filter("CSV File", &["csv"])
+                    //     .show_open_single_file()
+                    //     .unwrap();
 
-                    let path = match path {
-                        Some(path) => path,
-                        None => return,
-                    };
+                    // let path = match path {
+                    //     Some(path) => path,
+                    //     None => return,
+                    // };
 
-                    match transaction::parse_transactions(&path) {
-                        Ok(mut l) => {
-                            acc.get_portfolio().clean_transaction_list(&mut l);
-                            self.cator.append(&mut l);
-                            self.act_t = self.cator.pop();
-                        }
-                        Err(_) => todo!(),
-                    }
+                    // match transaction::parse_transactions(&path) {
+                    //     Ok(mut l) => {
+                    //         acc.get_portfolio().clean_transaction_list(&mut l);
+                    //         self.cator.append(&mut l);
+                    //         self.act_t = self.cator.pop();
+                    //     }
+                    //     Err(_) => todo!(),
+                    // }
                 }
                 ui.separator();
 
