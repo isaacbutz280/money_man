@@ -6,6 +6,7 @@
 pub mod wrap_app;   // This is our main app
 mod features;
 
+#[cfg(not(target_arch = "wasm32"))]
 pub fn start(cc: &eframe::CreationContext<'_>) -> Box<dyn eframe::App> {
     Box::new(wrap_app::WrapApp::new(cc))
 }

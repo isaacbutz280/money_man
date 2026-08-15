@@ -32,7 +32,7 @@ impl Assign {
         _frame: &mut eframe::Frame,
         acc: &mut app::Account,
     ) {
-        egui::TopBottomPanel::top("assign").show(ctx, |ui| {
+        egui::TopBottomPanel::top_panel("assign").show(ctx, |ui| {
             ui.vertical_centered(|ui| {
                 ui.heading("Assign");
             });
@@ -45,7 +45,7 @@ impl Assign {
         _frame: &mut eframe::Frame,
         acc: &mut app::Account,
     ) {
-        egui::TopBottomPanel::bottom("disp").show(ctx, |ui| {
+        egui::TopBottomPanel::bottom_panel("disp").show(ctx, |ui| {
             ui.horizontal(|ui| {
                 if ui.add(egui::Button::new("Ignore")).clicked() {
                     // Deselect all

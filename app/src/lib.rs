@@ -1,5 +1,4 @@
 // Library Imports
-use directories::ProjectDirs;
 use log;
 use serde;
 use serde_json;
@@ -36,10 +35,8 @@ impl Account {
      * The new function is the "constructor" for an Account.
      */
     pub fn new() -> Result<Account, Box<dyn error::Error>> {
-        // Default account location is
-        // %USERPROFILE%\AppData\Roaming\ButzIndustries\MoneyMan\data\acc.json
-        let binding = ProjectDirs::from("io", "ButzIndustries", "MoneyMan").unwrap();
-        let path = path::Path::new(binding.data_dir()).join("acc.json");
+        // Default account location for now
+        let path = path::Path::new("~/.local/share/money_man").join("acc.json");
         fs::create_dir_all(path.parent().unwrap())?;
 
         log::info!("Creating new account at {:?}", path);
@@ -56,7 +53,7 @@ impl Account {
         Ok(acc)
     }
 
-    pub fn open(acc_path: path::PathBuf) -> Result<Account, Box<dyn error::Error>> {
+    pub fn open(_acc_path: path::PathBuf) -> Result<Account, Box<dyn error::Error>> {
         // let file_read = fs::read_to_string(acc_path);
         let p = path::PathBuf::from("/home/butz/OneDrive/Documents/Finances/acc.json");
         let file_read = fs::read_to_string(p);

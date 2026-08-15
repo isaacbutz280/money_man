@@ -1,4 +1,3 @@
-use directories;
 use eframe::egui;
 use std::path;
 
@@ -31,11 +30,7 @@ impl Content for Welcome {
                 
                 // Return this result
                 let op_acc = if ui.button("Open").clicked() {
-                    // Default account location is
-                    // %USERPROFILE%\AppData\Roaming\ButzIndustries\MoneyMan\data\acc.json
-                    let binding =
-                        directories::ProjectDirs::from("io", "ButzIndustries", "MoneyMan").unwrap();
-                    let path = path::Path::new(binding.data_dir()).join("acc.json");
+                    let path = path::Path::new();
                                    
                     Some(Box::new(app::Account::open(path).unwrap()))
                 } else if ui.button("Open from...").clicked() {
