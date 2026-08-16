@@ -1,8 +1,11 @@
 use crate::{dollar, misc};
-use serde::{de::{self, Unexpected, Visitor}, Deserialize, Deserializer, Serialize};
+use chrono::NaiveDate;
 use lazy_static::lazy_static;
 use regex::Regex;
-use chrono::NaiveDate;
+use serde::{
+    Deserialize, Deserializer, Serialize,
+    de::{self, Unexpected, Visitor},
+};
 use std::{cmp, error, fmt, hash, path};
 
 // A transaction
@@ -90,7 +93,6 @@ impl hash::Hash for Transaction {
 
 impl PartialOrd for Transaction {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
-
         // Match by date
         match self.date.partial_cmp(&other.date) {
             Some(core::cmp::Ordering::Equal) => {}
@@ -110,7 +112,7 @@ impl Ord for Transaction {
     fn cmp(&self, other: &Self) -> cmp::Ordering {
         // Match by date
         match self.date.cmp(&other.date) {
-            cmp::Ordering::Equal => {},
+            cmp::Ordering::Equal => {}
             ord => return ord,
         }
         // Then by description
@@ -120,7 +122,6 @@ impl Ord for Transaction {
         }
         // Then by charge
         self.charge.cmp(&other.charge)
-
     }
 }
 
@@ -146,10 +147,7 @@ pub fn parse_transactions(path: &path::Path) -> Result<Vec<Transaction>, Box<dyn
         let date = record[0].to_owned();
         let desc = record[1].to_owned();
 
-        let amount = match misc::money_to_float(&record[2]) {
-            Ok(okay) => okay,
-            Err(_) => 0.0,
-        };
+        let amount = misc::money_to_float(&record[2]).unwrap_or(0.0);
 
         trans.push(Transaction::new(
             chrono::NaiveDate::parse_from_str(&date, "%m/%d/%Y").unwrap(),

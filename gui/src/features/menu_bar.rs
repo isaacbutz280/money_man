@@ -11,9 +11,8 @@ pub struct Menu {
 }
 
 impl eframe::App for Menu {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        egui::TopBottomPanel::top("wrap_app_top_bar").show(ctx, |ui| {
-
+    fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
+        egui::Panel::top("wrap_app_top_bar").show(ui, |ui| {
             ui.horizontal_wrapped(|ui| {
                 ui.visuals_mut().button_frame = false;
                 egui::widgets::global_dark_light_mode_switch(ui);
@@ -23,3 +22,4 @@ impl eframe::App for Menu {
         });
     }
 }
+

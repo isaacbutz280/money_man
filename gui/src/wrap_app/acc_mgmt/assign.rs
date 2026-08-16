@@ -28,11 +28,11 @@ impl Assign {
 
     fn update_top_panel(
         &mut self,
-        ctx: &egui::Context,
+        ui: &mut egui::Ui,
         _frame: &mut eframe::Frame,
         acc: &mut app::Account,
     ) {
-        egui::TopBottomPanel::top_panel("assign").show(ctx, |ui| {
+        egui::Panel::bottom("assign").show(ui, |ui| {
             ui.vertical_centered(|ui| {
                 ui.heading("Assign");
             });
@@ -41,11 +41,11 @@ impl Assign {
 
     fn update_bottom_panel(
         &mut self,
-        ctx: &egui::Context,
+        ui: &mut egui::Ui,
         _frame: &mut eframe::Frame,
         acc: &mut app::Account,
     ) {
-        egui::TopBottomPanel::bottom_panel("disp").show(ctx, |ui| {
+        egui::Panel::bottom("disp").show(ui, |ui| {
             ui.horizontal(|ui| {
                 if ui.add(egui::Button::new("Ignore")).clicked() {
                     // Deselect all
@@ -90,7 +90,6 @@ impl Assign {
                                 if v.0 == true {
                                     if self.even_weight {
                                         Some((k.as_str(), 1.0))
-
                                     } else {
                                         Some((k.as_str(), v.1))
                                     }
@@ -101,12 +100,16 @@ impl Assign {
                             .collect();
 
                         // Send for processing
-                        match acc.get_portfolio_mut().assign_transaction(&t, transaction, self.even_weight) {
+                        match acc.get_portfolio_mut().assign_transaction(
+                            &t,
+                            transaction,
+                            self.even_weight,
+                        ) {
                             Ok(_) => {
                                 // and get the next one
                                 self.act_t = self.cator.pop();
                                 acc.save();
-                            },
+                            }
                             Err(e) => println!("AHHHHHHHHHH: {}", e),
                         }
                     }
@@ -117,11 +120,11 @@ impl Assign {
 
     fn update_center_panel(
         &mut self,
-        ctx: &egui::Context,
+        ui: &mut egui::Ui,
         _frame: &mut eframe::Frame,
         acc: &mut app::Account,
     ) {
-        egui::CentralPanel::default().show(ctx, |ui| {
+        egui::CentralPanel::default().show(ui, |ui| {
             ui.horizontal_wrapped(|ui| {
                 if ui.button("Start").clicked() && self.act_t.is_none() {
                     // let path = FileDialog::new()
@@ -206,21 +209,22 @@ impl super::AccDisp for Assign {
         "Assign".to_string()
     }
 
-    fn update(
+    fn accdisp_ui(
         &mut self,
-        ctx: &egui::Context,
+        ui: &mut egui::Ui,
         frame: &mut eframe::Frame,
         acc: &mut Box<app::Account>,
     ) {
         // If any new vopes, add them in
         for v in acc.get_portfolio().view_vopes() {
             if !self.vope_list.contains_key(&v.name) {
-               self.vope_list.insert(v.name.clone(), (false, v.budget.as_f32()));
+                self.vope_list
+                    .insert(v.name.clone(), (false, v.budget.as_f32()));
             }
         }
 
-        self.update_top_panel(ctx, frame, acc);
-        self.update_bottom_panel(ctx, frame, acc);
-        self.update_center_panel(ctx, frame, acc);
+        self.update_top_panel(ui, frame, acc);
+        self.update_bottom_panel(ui, frame, acc);
+        self.update_center_panel(ui, frame, acc);
     }
 }

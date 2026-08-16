@@ -1,5 +1,5 @@
-use eframe::egui;
 use crate::features::{piechart, welcome_msg};
+use eframe::egui;
 
 #[derive(Default)]
 pub struct Home;
@@ -8,10 +8,14 @@ impl super::AccDisp for Home {
     fn disp_name(&self) -> String {
         "Home".to_string()
     }
-    
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame, acc: &mut Box<app::Account>) {
 
-        egui::CentralPanel::default().show(ctx, |ui| {
+    fn accdisp_ui(
+        &mut self,
+        ui: &mut egui::Ui,
+        frame: &mut eframe::Frame,
+        acc: &mut Box<app::Account>,
+    ) {
+        egui::CentralPanel::default().show(ui, |ui| {
             ui.columns(2, |columns| {
                 columns[0].with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
                     ui.add_space(ui.available_height() / 3.0);
@@ -21,7 +25,9 @@ impl super::AccDisp for Home {
                     ));
                 });
 
-                let t = acc.get_portfolio().view_vopes()
+                let t = acc
+                    .get_portfolio()
+                    .view_vopes()
                     .iter()
                     .map(|d| (d.name.as_str(), d.budget.as_f64()))
                     .collect::<Vec<(&str, f64)>>();
@@ -29,7 +35,5 @@ impl super::AccDisp for Home {
                 columns[1].add(piechart::PieChart::new(&t));
             });
         });
-
     }
-    
 }

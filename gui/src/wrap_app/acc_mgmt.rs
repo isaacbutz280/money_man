@@ -9,9 +9,9 @@ mod vope_mgr;
 
 // Another similar override to the egui::App
 trait AccDisp {
-    fn update(
+    fn accdisp_ui(
         &mut self,
-        ctx: &egui::Context,
+        ui: &mut egui::Ui,
         frame: &mut eframe::Frame,
         acc: &mut Box<app::Account>,
     );
@@ -26,19 +26,19 @@ pub struct AccMgmt {
 }
 
 impl Content for AccMgmt {
-    fn update(
+    fn content_ui(
         &mut self,
-        ctx: &eframe::egui::Context,
+        ui: &mut egui::Ui,
         frame: &mut eframe::Frame,
     ) -> Option<Box<dyn Content>> {
         // Left side AccDisp menu
-        self.sidepanel_left(ctx, frame);
+        self.sidepanel_left(ui, frame);
 
         // Right Side Portfolio display
-        self.sidepanel_right(ctx, frame);
+        self.sidepanel_right(ui, frame);
 
         // Main AccDisp to show
-        self.disp[self.indx].update(ctx, frame, &mut self.acc);
+        self.disp[self.indx].accdisp_ui(ui, frame, &mut self.acc);
 
         // For now, we will never leave this screen
         None
@@ -62,10 +62,10 @@ impl AccMgmt {
         }
     }
 
-    fn sidepanel_left(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        egui::SidePanel::left("sidepanel_left")
+    fn sidepanel_left(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        egui::Panel::left("tab_display")
             .resizable(false)
-            .show(ctx, |ui| {
+            .show(ui, |ui| {
                 ui.vertical_centered(|ui| {
                     ui.heading("💻 Sidebar");
                 });
@@ -86,10 +86,10 @@ impl AccMgmt {
             });
     }
 
-    fn sidepanel_right(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        egui::SidePanel::right("sidepanel_right")
+    fn sidepanel_right(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        egui::Panel::right("sidepanel_right")
             .resizable(false)
-            .show(ctx, |ui| {
+            .show(ui, |ui| {
                 ui.vertical_centered(|head_ui| {
                     head_ui.heading("Account Information");
                 });
@@ -98,17 +98,16 @@ impl AccMgmt {
 
                 let p = self.acc.get_portfolio();
 
-                egui::ScrollArea::new([false, true])
-                    .show(ui, |scroll_ui| {
-                        scroll_ui.vertical_centered(|ui| {
-                            ui.label(format!("Net Worth: {}", p.view_holdings()));
-                            ui.separator();
-                            ui.label(format!("Total Budget: {}", p.view_budgeted()))
-                        });
-                        scroll_ui.separator();
-
-                        scroll_ui.add(acc_table::VertAccDisp::new(p.view_vopes().clone()));
+                egui::ScrollArea::new([false, true]).show(ui, |scroll_ui| {
+                    scroll_ui.vertical_centered(|ui| {
+                        ui.label(format!("Net Worth: {}", p.view_holdings()));
+                        ui.separator();
+                        ui.label(format!("Total Budget: {}", p.view_budgeted()))
                     });
+                    scroll_ui.separator();
+
+                    scroll_ui.add(acc_table::VertAccDisp::new(p.view_vopes().clone()));
+                });
 
                 ui.separator();
             });
