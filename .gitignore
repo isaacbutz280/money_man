@@ -3,3 +3,5 @@
 /app/acc
 /app/csv
 *.lock
+.aider*
+.env
